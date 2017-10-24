@@ -1,3 +1,33 @@
+<?php
+
+/* find user's preferred locales
+ */
+if(preg_match("/cs|sk/", $_SERVER["HTTP_ACCEPT_LANGUAGE"])) {
+    $locale = "czech";
+}
+
+/* do we have a certificate submitted?
+ */
+function decode() {
+    if(strcmp($_POST["decode"], "yes") === 0) {
+        $CERTIFICATE = $_POST["certificate"];
+        $START       = "-----BEGIN CERTIFICATE-----";
+        $END         = "-----END CERTIFICATE-----";
+
+        if(preg_match("/$START/", $CERTIFICATE) === 1) {
+            $START = "";
+        }
+
+        if(preg_match("/$END/", $CERTIFICATE) === 1) {
+            $END = "";
+        }
+
+        $X509Certificate =  $START . "\n" . trim ($CERTIFICATE) . "\n" . $END;
+        return $cert = openssl_x509_parse($X509Certificate, true);
+    }
+}
+
+?>
 <!DOCTYPE html>
 
 <html>
@@ -10,24 +40,85 @@
 </head>
 <body>
 
-<h1>Certificate Decoder</h1>
 <?php
 
-if(strcmp($_POST["decode"], "yes") === 0) {
-    $CERTIFICATE = $_POST["certificate"];
-    $START       = "-----BEGIN CERTIFICATE-----";
-    $END         = "-----END CERTIFICATE-----";
+switch($locale) {
+    case "czech":
+        echo "<h1>Dekodér certifikátů</h1>\n";
+        break;
+    default:
+        echo "<h1>Certificate Decoder</h1>\n";
+        break;
+}
 
-    if(preg_match("/$START/", $CERTIFICATE) === 1) {
-        $START = "";
-    }
+$cert = decode();
+if(!is_null($cert)) {
 
-    if(preg_match("/$END/", $CERTIFICATE) === 1) {
-        $END = "";
-    }
+    switch($locale) {
+        case "czech":
+?>
 
-    $X509Certificate =  $START . "\n" . trim ($CERTIFICATE) . "\n" . $END;
-    $cert = openssl_x509_parse($X509Certificate, true);
+<table>
+    <tr>
+        <td>Common Name</td>
+        <td><?=$cert["subject"]["CN"]?></td>
+    </tr>
+    <tr>
+        <td>Alternativní jména</td>
+        <td><?=$cert["extensions"]["subjectAltName"]?></td>
+    </tr>
+    <tr>
+        <td>Organizace</td>
+        <td><?=$cert["subject"]["O"]?></td>
+    </tr>
+    <tr>
+        <td>Lokalita</td>
+        <td><?=$cert["subject"]["L"]?></td>
+    </tr>
+    <tr>
+        <td>Stát (město)</td>
+        <td><?=$cert["subject"]["ST"]?></td>
+    </tr>
+    <tr>
+        <td>Země</td>
+        <td><?=$cert["subject"]["C"]?></td>
+    </tr>
+    <tr>
+        <td>Platný od</td>
+        <td><?=date("d. m. Y", $cert["validFrom_time_t"])?></td>
+    </tr>
+    <tr>
+        <td>Platný do</td>
+        <td><?=date("d. m. Y", $cert["validTo_time_t"])?></td>
+    </tr>
+    <tr>
+        <td>Vydavatel</td>
+        <td><?=$cert["issuer"]["CN"]?>, <?=$cert["issuer"]["O"]?>, <?=$cert["issuer"]["L"]?>, <?=$cert["issuer"]["ST"]?>, <?=$cert["issuer"]["C"]?></td>
+    </tr>
+    <tr>
+        <td>Sériové číslo</td>
+        <td><?=$cert["serialNumberHex"]?></td>
+    </tr>
+    <tr>
+        <td>Použití</td>
+        <td><?=$cert["extensions"]["keyUsage"]?></td>
+    </tr>
+    <tr>
+        <td>Rozšířené použití</td>
+        <td><?=$cert["extensions"]["extendedKeyUsage"]?></td>
+    </tr>
+    <tr>
+        <td>Distribuční body CRL</td>
+        <td>
+<pre><?=$cert["extensions"]["crlDistributionPoints"]?></pre>
+        </td>
+    </tr>
+</table>
+
+<p><a href=".">Dekódovat další certifikát</a></p>
+<?php
+            break;
+        default:
 ?>
 
 <table>
@@ -89,9 +180,28 @@ if(strcmp($_POST["decode"], "yes") === 0) {
 
 <p><a href=".">Decode another certificate</a></p>
 <?php
+            break;
+    }
 
 } else {
 
+    switch($locale) {
+        case "czech":
+?>
+
+<p><em>Nápověda:</em> Vložte certifikát buď se začínajícím <code>-----BEGIN
+CERTIFICATE-----</code> a končícím <code>-----END CERTIFICATE-----</code> nebo
+bez nich.</p>
+
+<form action="./index.php" method="post">
+    <input type="hidden" name="decode" value="yes">
+    <textarea cols="70" rows="35" name="certificate" placeholder="Vložte certifikát k dekódování" required autofocus></textarea>
+    <br>
+    <input type="submit" value="Decode">
+</form>
+<?php
+            break;
+        default:
 ?>
 
 <p><em>Tip:</em> Insert a certificate below either with starting
@@ -105,7 +215,8 @@ CERTIFICATE-----</code> or without it.</p>
     <input type="submit" value="Decode">
 </form>
 <?php
-
+            break;
+    }
 }
 
 ?>
