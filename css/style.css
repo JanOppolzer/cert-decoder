@@ -1,0 +1,25 @@
+body {
+    background-color: #fff;
+    color: #333;
+    margin: 1em;
+    font-size: 100%;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, table td {
+    border: 1px solid #333;
+    padding: 0.5em;
+}
+
+textarea {
+    font-family: monospace;
+    margin-bottom: 1em;
+}
+
+code {
+    background-color: #ccc;
+}
+
