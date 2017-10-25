@@ -54,6 +54,21 @@ switch($locale) {
 $cert = decode();
 if(!is_null($cert)) {
 
+    if(!is_array($cert)) {
+
+        switch($locale) {
+            case "czech":
+                echo "<p>Tohle není certifikát.</p>\n";
+                echo "<p><a href=\".\">Dekódovat další certifikát</a></p>\n";
+                break;
+            default:
+                echo "<p>Not a certificate.</p>\n";
+                echo "<p><a href=\".\">Decode another certificate</a></p>\n";
+                break;
+        }
+
+    } else {
+
     switch($locale) {
         case "czech":
 ?>
@@ -181,6 +196,7 @@ if(!is_null($cert)) {
 <p><a href=".">Decode another certificate</a></p>
 <?php
             break;
+    }
     }
 
 } else {
