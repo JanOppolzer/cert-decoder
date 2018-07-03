@@ -2,6 +2,7 @@
 
 /* find user's preferred locales
  */
+$locale = null;
 if(preg_match("/cs|sk/", $_SERVER["HTTP_ACCEPT_LANGUAGE"])) {
     $locale = "czech";
 }
@@ -9,21 +10,23 @@ if(preg_match("/cs|sk/", $_SERVER["HTTP_ACCEPT_LANGUAGE"])) {
 /* do we have a certificate submitted?
  */
 function decode() {
-    if(strcmp($_POST["decode"], "yes") === 0) {
-        $CERTIFICATE = $_POST["certificate"];
-        $START       = "-----BEGIN CERTIFICATE-----";
-        $END         = "-----END CERTIFICATE-----";
+    if(!empty($_POST)) {
+        if(strcmp($_POST["decode"], "yes") === 0) {
+            $CERTIFICATE = $_POST["certificate"];
+            $START       = "-----BEGIN CERTIFICATE-----";
+            $END         = "-----END CERTIFICATE-----";
 
-        if(preg_match("/$START/", $CERTIFICATE) === 1) {
-            $START = "";
+            if(preg_match("/$START/", $CERTIFICATE) === 1) {
+                $START = "";
+            }
+
+            if(preg_match("/$END/", $CERTIFICATE) === 1) {
+                $END = "";
+            }
+
+            $X509Certificate =  $START . "\n" . trim ($CERTIFICATE) . "\n" . $END;
+            return $cert = openssl_x509_parse($X509Certificate, true);
         }
-
-        if(preg_match("/$END/", $CERTIFICATE) === 1) {
-            $END = "";
-        }
-
-        $X509Certificate =  $START . "\n" . trim ($CERTIFICATE) . "\n" . $END;
-        return $cert = openssl_x509_parse($X509Certificate, true);
     }
 }
 
