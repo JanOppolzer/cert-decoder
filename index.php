@@ -10,6 +10,8 @@ if(preg_match("/cs|sk/", $_SERVER["HTTP_ACCEPT_LANGUAGE"])) {
 /* do we have a certificate submitted?
  */
 function decode() {
+    if(!extension_loaded("openssl")) die("OpenSSL support missing.");
+
     if(!empty($_POST)) {
         if(strcmp($_POST["decode"], "yes") === 0) {
             $CERTIFICATE = $_POST["certificate"];
